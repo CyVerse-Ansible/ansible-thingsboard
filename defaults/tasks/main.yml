@@ -1,0 +1,41 @@
+---
+- name: Create directories for ThingsBoard
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "~/.mytb-data"
+    - "~/.mytb-logs"
+
+- name: Set ownership for ~/.mytb-data directory
+  file:
+    path: "{{ item }}"
+    owner: 799
+    group: 799
+    recurse: yes
+  loop:
+    - "~/.mytb-data"
+
+- name: Set ownership for ~/.mytb-logs directory
+  file:
+    path: "{{ item }}"
+    owner: 799
+    group: 799
+    recurse: yes
+  loop:
+    - "~/.mytb-logs"
+
+- name: Run the ThingsBoard Docker container
+  docker_container:
+    name: mytb
+    image: thingsboard/tb-postgres
+    restart_policy: always
+    ports:
+      - "9090:9090"
+      - "1883:1883"
+      - "7070:7070"
+      - "5683-5688:5683-5688/udp"
+    volumes:
+      - "~/.mytb-data:/data"
+      - "~/.mytb-logs:/var/log/thingsboard"
