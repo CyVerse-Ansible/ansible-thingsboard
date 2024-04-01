@@ -1,4 +1,9 @@
 ---
+- name: Install tb-rest-client using pip3
+  pip:
+    name: tb-rest-client
+    executable: pip3
+
 - name: Create directories for ThingsBoard
   file:
     path: "{{ item }}"
@@ -8,15 +13,6 @@
     - "~/.mytb-data"
     - "~/.mytb-logs"
 
-- name: Set ownership for ~/.mytb-data directory
-  file:
-    path: "{{ item }}"
-    owner: "799"
-    group: "799"
-    recurse: yes
-  loop:
-    - "~/.mytb-data"
-
 - name: Set ownership for ~/.mytb-logs directory
   file:
     path: "{{ item }}"
@@ -24,6 +20,7 @@
     group: "799"
     recurse: yes
   loop:
+    - "~/.mytb-data"
     - "~/.mytb-logs"
 
 - name: Run the ThingsBoard Docker container, port open on {IP}:9090
@@ -39,4 +36,15 @@
     volumes:
       - "~/.mytb-data:/data"
       - "~/.mytb-logs:/var/log/thingsboard"
-    
+
+- name: Wait for the ThingsBoard container to start
+  wait_for:
+    host: localhost
+    port: 9090
+    delay: 10
+    timeout: 60
+    state: started
+
+- name: change admin password
+  command: "python3 ansible-thingsboard/script.py {{ admin_password }}"
+
